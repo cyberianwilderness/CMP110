@@ -1,0 +1,519 @@
+#include <iostream>
+using namespace std;
+#include <string>
+#include <cstdlib>    // random numbers header files
+#include <stdlib.h> // for colouring in entire text
+#include <ctime>    // used to get date and time information
+#include <windows.h> // for colouring parts of text
+
+int main()
+{
+	// --- establish variables ---
+	int hunger = 4; int energy = 10; int excitement = 5; // counters
+	string petName; string gender; string pronoun; string subjectPronoun;
+	char option; char renamePet; char quit = 'n';
+
+	//  --- function prototypes --- 
+	void happinessLevel(int, int, int, string, string); // the happiness function needs to take in sleep, hunger and excitement integers.
+	void sleepLevel(int&, string, string); // the sleep variable will be changed in this function and passed back to the main function.
+	void hungerLevel(int&, string, string); // the hunger variable will be changed in this function and passed back to the main function.
+	void excitementLevel(int&, string, string);
+	void petPlay(int*, int*, int*, string, string); // the excitement, hunger and energy variables will all be altered in this function and need to be passed back to the main.
+	void menu(string, char&); // the char option needs to be passed back as this is the option the user selects on the main menu.
+	bool isValidInput(char); // checks the user has inserted a valid character.
+	bool isValidGender(string); // checks the user has inserted a valid gender.
+	void setOutputColourRed(); // change text red
+	void setOutputColourGreen(); // change text green
+	void setOutputColourWhite(); // change text white
+
+	// 1 - Allow user to give name and gender to Cyberpet
+	cout << "Greetings, your cyberpet is excited to meet you! \nEnter 'y' to give your cyberpet a new name, or 'n' to continue with the name 'your pet'. :  ";
+	cin >> renamePet;
+	while (!isValidInput(renamePet)) // check user has inserted more than one character.
+
+	{
+		cout << "Sorry, your input was not recognised. Insert 'y' to give your cyberpet a new name, or 'n' to continue with the name 'your pet'. :  ";
+		cin >> renamePet;
+	}
+	if (renamePet == 'y' || renamePet == 'Y')
+	{
+		cout << "What would you like to call your pet? : ";
+		cin >> petName;
+		cout << "Is your pet male or female? : ";
+		cin >> gender;
+	}
+	else // 1.1 - Otherwise call it pet as the user has inserted n (which has been checked in isValidInput).
+	{
+		petName = "your pet";
+		cout << "Is your pet male or female? : ";
+		cin >> gender;
+	}
+
+	while (!isValidGender(gender)) //check a male or female input has been inserted and loop until this happens
+	{
+		cout << "Unexpected input enterred, please insert male or female : ";
+		cin >> gender;
+		isValidGender(gender);
+	}
+	if (gender == "male" || gender == "MALE")
+	{
+		pronoun = "his";
+		subjectPronoun = "he";
+	}
+	else // used else instead of else if as the only other value for gender apart from male/MALE can be femaile/FEMALE
+	{
+		pronoun = "her";
+		subjectPronoun = "she";
+	}
+
+	while (quit != 'y')
+	{
+		// 2 - User overview and options
+			// 2.1 - Display a warning sign if pet is starving, close falling asleep or are bored
+		if (energy < 3 || hunger < 3 || excitement < 3)
+		{
+			setOutputColourRed();
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (FOREGROUND_INTENSITY | FOREGROUND_RED));
+			cout << "WARNING, " << petName << " is trying to tell you something is wrong. Press 'D' to find out what area/areas " << subjectPronoun << " needs looked after." << endl;
+
+		}
+		setOutputColourWhite();
+		// 2.1.2 - Display interface for all options user can do
+		menu(petName, option);
+
+		switch (option)
+		{
+			//2.2 - Output current state of pet if selected.
+		case 'D':
+			if (excitement > 8)
+			{
+				setOutputColourGreen();
+				happinessLevel(hunger, excitement, energy, pronoun, petName);
+				cout << endl;
+				excitementLevel(excitement, pronoun, petName);
+				cout << " - Happiness Level : " << excitement << "/10\n";
+				setOutputColourWhite();
+			}
+			else
+			{
+				happinessLevel(hunger, excitement, energy, pronoun, petName);
+				cout << endl;
+				excitementLevel(excitement, pronoun, petName);
+				cout << " - Happiness level : " << excitement << "/10\n";
+			}
+
+			if (energy > 8)
+			{
+				setOutputColourGreen();
+				sleepLevel(energy, pronoun, petName);
+				cout << " - Sleep Level : " << energy << "/10\n";
+				setOutputColourWhite();
+			}
+			else
+			{
+				sleepLevel(energy, pronoun, petName);
+				cout << " - Sleep Level : " << energy << "/10\n";
+			}
+
+			if (hunger > 8)
+			{
+				setOutputColourGreen();
+				hungerLevel(hunger, pronoun, petName);
+				cout << " - Hunger Level : " << hunger << "/10";
+				setOutputColourWhite();
+			}
+			else
+			{
+				hungerLevel(hunger, pronoun, petName);
+				cout << " - Hunger Level : " << hunger << "/10";
+			}
+			break;
+
+			//2.3 - Give pet a nap.
+		case 'N': cout << "You have given " << petName << " a nap, " << subjectPronoun << " looks more energised now!" << endl;
+			excitement--; energy = energy + 6; hunger = hunger - 2;
+			break;
+
+			//2.4 - Play with pet.
+		case 'P': cout << "You look at " << petName << " who eagerly awaits to play with you. \nWhich of the following activities do you want to do with " << petName << "?" << endl;
+			petPlay(&hunger, &excitement, &energy, petName, pronoun);
+
+			break;
+
+			// 2.5 - Feed pet.
+		case 'F': cout << "You have given " << petName << " a sachet of " << pronoun << " favourite food!";
+			hunger = hunger + 5;
+			energy = energy - 2;
+			// excitement doesn't change when eating
+			break;
+
+			// 2.6 Allow user to quit program.
+		case 'Q': cout << "Thank you for playing with " << petName << ", enjoy the rest of your day!";
+			quit = 'y';
+			break;
+
+			// 2.7 Allow user to clear the screen.
+		case 'C':
+			system("cls"); // clear the screen
+			break;
+			// 2.8 Deal with any unexpected inputs.
+		default: cout << "You have not entered a valid character, please try again.";
+		}
+		cout << endl; //to keep things neat
+
+			// 2.9 Exit Program if user has neglected the sleep or hunger levels of their pet.
+		if (energy < 1)
+		{
+			sleepLevel(energy, pronoun, petName); // display death by exhaustion
+			quit = 'y';
+		}
+		if (hunger < 1)
+		{
+			hungerLevel(hunger, pronoun, petName); // display death by hunger text 
+			quit = 'y';
+		}
+	}
+	return 0;
+}
+
+
+void menu(string petName, char& option)
+{
+	cout << "\nCyberpet Main Menu" << endl; // new line at the start for layout purposes
+	cout << "Press 'F' to feed " << petName << ". \t \t Press 'N' to Give a nap to " << petName << endl;
+	cout << "Press 'P' to play with " << petName << ". \t Press 'D' to display " << petName << "'s current state. " << endl;
+	cout << "Press 'Q' to quit.\t \t \t Beginning to look clogged up on here? Press 'C' to tidy things up.  \nWhat option would you like to select : ";
+	cin >> option; 
+	cout << endl; // this is to help create a neater user interface
+}
+
+// 3 - Establish variables that determine cyberpets mood
+	// 3.1 - Hunger - This will be a scale of 0-10. Max Hunger = 10
+void hungerLevel(int& hunger, string pronoun, string petName)
+{
+	cout << petName << "'s current hunger status : ";
+	// 3.1.1 - Well Fed >8
+	if (hunger >= 8)
+	{
+		if (hunger > 10)
+		{
+			hunger = 10; // if the hunger level is above 10, manually set it to 10 to create a max value effect
+		}
+		cout << petName << " is feeling well fed currently.\t";
+	}
+	// 3.1.2 - Slightly Peckish - <8
+	else if (hunger < 8 && hunger>4)
+	{
+		cout << petName << " is feeling slightly peckish currently.\t";
+	}
+	// 3.1.3 - Rather Hungry - <5
+	else if (hunger < 5 && hunger >2)
+	{
+		cout << petName << " is feeling rather hungry at the moment.\t";
+	}
+	// 3.1.4 - Starving - <3
+	else if (hunger < 3 && hunger >0)
+	{
+		cout << petName << " is feeling starving, you should consider feeding " << pronoun << " a sachet of food.\t";
+	}
+	// 3.1.5 - Dead = 0
+	else
+	{
+		system("Color 0C");
+		cout << "Unfortunately, " << petName << " is dead as you haven't fed " << petName << " in too long a time period.";
+	}
+	return;
+}
+
+
+// 3.2 Calculate tiredness
+void sleepLevel(int& energy, string pronoun, string petName)
+{
+	cout << petName << "'s current energy status : ";
+	// 3.2.1 - Wide Awake >7
+	if (energy > 7)
+	{
+
+		if (energy > 10)
+		{
+			energy = 10; // if energy is above 10, muanually set it to 10 to create a max value effect.
+		}
+		cout << petName << " is wide awake and full of energy.\t";
+		return;
+	}
+	// 3.2.2 - Awake >4
+	else if (energy > 4)
+	{
+		cout << petName << " is awake and fine currently.\t";
+		return;
+	}
+	// 3.2.3 - Tired >2
+	else if (energy > 2)
+	{
+		cout << petName << " is feeling tired currently.\t";
+		return;
+	}
+	// 3.2.4 - Falling Asleep >0
+	else if (energy > 0)
+	{
+		cout << petName << " is starting to fall asleep, you should consider giving " << pronoun << " a nap.\t";
+		return;
+	}
+	// 3.2.5 - Collapsed 0
+	else
+	{
+		system("Color 0C");
+		cout << petName << " has unfortunately collapsed.";
+		return;
+	}
+}
+
+// 3.3 Calculate tiredness
+void excitementLevel(int& excitement, string pronoun, string petName)
+{
+	cout << petName << "'s current excitement status : ";
+	// 3.3.1 - Wide Awake >7
+	if (excitement > 7)
+	{
+
+		if (excitement > 10)
+		{
+			excitement = 10; // if excitement is above 10, manually set it to 10 to to create a max value effect.
+		}
+		cout << petName << " is so excited and happy you are giving them attention!\t";
+		return;
+	}
+	// 3.3.2 - Awake >4
+	else if (excitement > 5)
+	{
+		cout << petName << " is fairly happy with how much attention " << pronoun << " has had, but would like more.\t";
+		return;
+	}
+	// 3.3.3 - Tired >2
+	else if (excitement > 2)
+	{
+		cout << petName << " is starting to get bored.\t";
+		return;
+	}
+	// 3.3.4 - Falling Asleep >0
+	else if (excitement > 0)
+	{
+		cout << petName << " is completely bored and wants to do something with you.\t";
+		return;
+	}
+	// 3.3.5 - Collapsed 0
+	else
+	{
+		system("Color 0C");
+		cout << petName << " has unfortunately collapsed.";
+		return;
+	}
+}
+
+
+// 3.4 Play with your cybetpet
+void petPlay(int* hunger, int* excitement, int* energy, string petName, string subjectPronoun)
+{
+	// pointers are used so that the hunger, excitement and energy values can change according to the various activities that can be done with the cyberpet.
+	srand(time(0)); //initialise random num generator using time.
+	int toy = rand() % 4 + 1; // generate a random number between 1 and 4.
+	int n; // for the array 
+	int a; // for array repetitions
+
+	char playActivity; // variable that user inserts to choose activity
+	cout << "Press 'T' to speak to " << petName << " about anything on your mind \nPress 'H' to hug " << petName << ".\nPress 'F' to play fetch with any of the 4 toys that " << petName << " brings to you. \nPress 'W' to go for a hill walk. : ";
+	string dialogue; // variable to store what the user wants to say to the pet.
+	string hill; // to output the different hill you walked with your pet
+	cin >> playActivity;
+
+	switch (playActivity)
+	{	// 3.4.1 - talk to pet about anything on your mind
+	case 'T': cout << "Type what you want to say to " << petName << " whilst giving " << subjectPronoun << " a nice brush : ";
+		cin.ignore(); // this allows getline underneath to function without removing words from the string.
+		getline(cin, dialogue); // take in entire string from user including white spaces.
+		cout << petName << " didn't quite understand what '" << dialogue << "' means, but enjoyed listening to you and giving " << subjectPronoun << " attention nonetheless!";
+		*excitement = *excitement + 2;
+		*energy = *energy - 1;
+		*hunger = *hunger - 1;
+		break;
+
+		// 3.4.2 - hug your cyperpet
+	case 'H': cout << "You wrap your arms around " << petName << " and give " << petName << " a big hug.";
+		*excitement = *excitement + 3;
+		*energy = *energy - 1;
+		*hunger = *hunger - 1;
+		break;
+
+		// 3.4.3 - play fetch with toys
+	case 'F': cout << "You shout fetch and " << petName << " runs to find something to bring to you to throw. ";
+		toy = rand() % 4 + 1; //generate new random number beween 1 to 4 to determine what toy the cyberpet brings.
+		switch (toy) // each toy that is randomly selected has a differing impact on the excitement variable
+		{
+		case 1: cout << petName << " brings you a frisbee, eagerly awaiting you to throw it.";
+			*excitement = *excitement + 2;
+			break;
+		case 2: cout << petName << " brings you a squeaky carrot toy, not " << subjectPronoun << " favourite, but still ok!";
+			*excitement = *excitement + 1;
+			break;
+		case 3: cout << petName << " brings you " << subjectPronoun << " favourite toy,\na half chewed up tennis ball, overwhelmed with excitement as you throw it with all your might.";
+			*excitement = *excitement + 3;
+			break;
+		case 4: cout << petName << " brings you a piece of rope which you pretend to throw, \Nsending " << subjectPronoun << " scurrying into the distance before realising what you had done much to your hilarity." << petName << " is not pleased. " << petName << " has lost some happiness.";
+			*excitement = *excitement - 1;
+			break;
+		}
+		*energy = *energy - 2; // playing fetch will lost 2 points of energy regardless of the object chosen randomly.
+		*hunger = *hunger - 1; // playing fetch will lose 1 point of hunger regardless of the object chosen randomly.
+		return;
+		break;
+
+		// 3.4.4 Allow user to specify size of hill walk with cyber pet.
+	case 'W': cout << "You take " << petName << " for a hill walk nearby." << endl;
+
+		cout << "How many kilometers do you wish to take " << petName << " for a hill walk? : ";
+		cin >> n;
+
+		if (n > 15 && n <= 22) // max size of array I have chosen is 22 
+		{
+			hill = "Glen Prosen";
+			a = 4; // as this is the biggest hike there will be 4 arrays from left to right represent more exercises done on the array (elevation chart)
+		}
+		else if (n >= 10 && n <= 15)
+		{
+			hill = "Sidlaw Hills";
+			a = 3; // as this is the second biggest hike there will be 3 arrays from left to right represent more exercises done on the array (elevation chart)
+		}
+		else if (n >= 5 && n < 10)
+		{
+			hill = "Loch Brandy";
+			a = 2; // as this is the second smallest hike there will be 2 arrays from left to right represent more exercises done on the array (elevation chart)
+		}
+		else if (n > 2 && n < 5)
+		{
+			hill = "Arbroath Cliffs";
+			a = 1; // as this is the smallest hike there will only be one array.
+		}
+		else if (n > 21 || n < 3)
+		{
+			cout << "You've either decided to go further than a half marathon or shorter than 3km, " << petName << " doesn't not like the prospect of either of those." << endl;
+			cout << "The biggest walk " << petName << " can manage is 22km and the smallest walk " << petName << " will go on is 3km.";
+			break;
+		}
+		else
+		{
+			cout << "You have not entered in a valid number."; //catch invalid inputs
+		}
+
+		for (int i = 0; i <= n; i++) // array outputs incline of how high you have travelled, n=kilometers the user wants to walk
+		{
+			for (int l = 0; l < a; l++) // How many repitions
+			{
+				for (int k = n - i; k > 0; k--) // this prints spaces to allow the asterisks to create a pyramid shape
+				{
+					cout << " ";
+				}
+				for (int j = 1; j <= i; j++)
+
+					cout << "* "; // the space after the * is used to create a pyramid effect.
+
+				for (int k = n - i; k > 0; k--)
+				{
+					cout << " ";
+				}
+
+			}
+			cout << endl;
+		}
+		cout << "Here is the elevation chart from your hike up " << hill << endl << "A tired out " << petName << " had a great time.";
+		*excitement = *excitement + 8;
+		*energy = *energy - 4;
+		*hunger = *hunger - 4;
+		break;
+
+	default: cout << "You have not entered a valid character, please try again."; // catch bad data
+	}
+	if (*excitement > 10)
+	{
+		*excitement = 10; //if excitement is above 10 set it manually to 10.
+	}
+}
+
+
+// 3.5 Calculate happiness Level
+	//3.5.1 Take in hunger, energy and excitement levels
+void happinessLevel(int hunger, int excitement, int energy, string subjectPronoun, string petName)
+{
+	// 3.5.2 - Calculate happiness through a weighted equation, happiness = 50% hunger + 20% energy + 30% excitement. Display to the user the state of their pet depending the outcome of the above equation
+	double howHappy = (hunger * 0.5) + (energy * 0.2) + (excitement * 0.3);
+
+	if (howHappy > 8)
+	{
+		cout << petName << " is incredibly happy - you are taking great care of " << petName << "!\t";
+	}
+	else if (howHappy >= 5 && howHappy <= 8)
+	{
+		cout << petName << " is reasonably happy, remember to keep taking care of all " << subjectPronoun << " needs!\t";
+	}
+	else if (howHappy > 2 && howHappy < 5)
+	{
+		cout << petName << " is beginning to feel unhappy - make sure you that " << petName << " is being fed, rested and getting the opportunity to play with you.\t";
+	}
+	else
+	{
+		cout << petName << " is feeling really unhappy, make sure you look after " << petName << " by making sure " << subjectPronoun << " gets plenty rest, fun and food! (hint - food determines " << subjectPronoun << "'s mood the most!\t";
+		if (excitement < 0)
+		{
+			excitement = 0; // if the value is negative, set it to 0 as this is the lowest number on the scale. This is achieved by having and negative number subtract itself to equal 0.
+		}
+		cout << endl;
+		cout << petName << "'s current happiness status : ";
+	}
+}
+
+// check the user has inserted a valid gender.
+bool isValidGender(string gender)
+{
+	if (gender == "male" || gender == "MALE")
+	{
+		return true;
+	}
+	else if (gender == "female" || gender == "FEMALE")
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+// checks the user inserts a y or n at the start of the program
+bool isValidInput(char renamePet)
+{
+	if (renamePet == 'y' || renamePet == 'Y')
+	{
+		return true;
+	}
+	else if (renamePet == 'n' || renamePet == 'N')
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void setOutputColourRed()
+{
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (FOREGROUND_INTENSITY | FOREGROUND_RED)); // brighter red matches the system red if the user gets a game over and looks cleaner on screen
+}
+
+void setOutputColourWhite()
+{
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7); // no foreground intensity used so white matches original Visual Studio White output
+}
+
+void setOutputColourGreen()
+{
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (FOREGROUND_INTENSITY | FOREGROUND_GREEN)); // higher intensity green looks clearer on screen
+}
